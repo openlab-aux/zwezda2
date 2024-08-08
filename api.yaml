@@ -1,0 +1,187 @@
+openapi: 3.0.2
+info:
+  version: '0.1.0'
+  title: Zwezda2
+  description: Zwezda2 API Sepecification
+
+tags:
+  - name: Space Status
+    description: Operations that manage the space status
+  - name: Door Status
+    description: Operations that manage the door status
+  - name: User
+    description: Operations that refer to the user of the API
+servers:
+  - url: 'http://localhost:3000/api'
+
+security:
+  - oidc: []
+
+paths:
+  '/door': # path parameter in curly braces
+    get: # documentation for GET operation for this path
+      tags:
+        - Door Status
+      summary: Retrieve the door status
+      operationId: getDoorStatus
+      
+      responses: # list of responses
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoorStatus'
+              example:
+                state: STATUS_PUBLIC
+        '403':
+          description: Forbidden
+    put:
+      tags:
+        - Door Status
+      summary: Set the door status
+      operationId: setDoorStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DoorStatus'
+      responses:
+        '302':
+          description: Success and redirect
+        '403':
+          description: Forbidden
+
+  '/space': 
+    get: # documentation for GET operation for this path
+      tags:
+        - Space Status
+      summary: Retrieve the door status
+      operationId: getDoorStatus
+      
+      responses: # list of responses
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoorStatus'
+              example:
+                state: STATUS_PUBLIC
+        '403':
+          description: Forbidden
+    put:
+      tags:
+        - Space Status
+      summary: Set the space status
+      operationId: setSpaeStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpaceStatus'
+      responses:
+        '302':
+          description: Success and redirect
+        '403':
+          description: Forbidden
+  
+  '/buzz':
+    post: 
+      summary: Directly control the buzzer
+      operationId: commandBuzz
+      requestBody:
+        required: true
+        description: Additional Information
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/BuzzCommand"
+      tags:
+        - Door Status  
+      responses:
+        '200':
+          description: Success
+        '403':
+          description: Forbidden
+  
+  '/whoami':
+    get:
+      summary: Get User Info
+      tags:
+        - User
+      operationId: getUserInfo
+      responses:
+        '200':
+          description: Success
+          content:
+            'application/json':
+              example:
+                user: "peter.lustig"
+                roles: ["user"]
+              schema:
+                $ref: "#/components/schemas/UserInfo"
+        '403':
+          description: Forbidden
+
+      
+
+        
+# An object to hold reusable parts that can be used across the definition
+components:
+  schemas:
+    UserInfo:
+      type: object
+      required: ["username", "roles"]
+      properties:
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - user
+              - keyholder
+              - host
+
+    DoorStatus:
+      type: object
+      required: ["state"]
+      properties:
+        state:
+          type: string
+          enum: ["MODE_ENTRY", "MODE_NOOP"]
+        duration:
+          type: number
+          description: Duration in Seconds
+          minimum: 0
+          maximum: 3600
+
+    SpaceStatus:
+      type: object
+      required: ["state"]
+      properties:
+        state:
+          type: string
+          enum: ["STATUS_PUBLIC", "STATUS_MEMBERS", "STATUS_CLOSED"]
+
+    BuzzCommand:
+      type: object
+      required: ["buzzer_id", "duration"]
+      properties:
+        buzzer_id:
+          type: string
+          enum: ["outside", "inside"]
+        duration:
+          description: Time in milliseconds
+          type: number
+          minimum: 0
+          maximum: 10000
+
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      openIdConnectUrl: https://keycloak.lab.weltraumpflege.org/realms/OpenLabTest/.well-known/openid-configuration
